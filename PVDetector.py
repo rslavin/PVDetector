@@ -23,14 +23,6 @@ def detect(ontology_path, mappings_path, fd_out, privacy_policy_path=None):
         sys.exit(-1)
 
     try:
-        with open(ontology_path, 'r') as ont_f:
-            ontology = ont_f.read()
-            # TODO parse file
-    except IOError as e:
-        print(f"Unable to open ontology file at '{ontology_path}': {e}", file=sys.stderr)
-        sys.exit(-1)
-
-    try:
         with open(mappings_path, 'r') as map_f:
             mappings = map_f.read()
     except IOError as e:
@@ -124,7 +116,6 @@ def filter_implicit(leaks, mappings, policy, ontology):
     weak_violations = {}
     strong_violations = []
     with owlready2.get_ontology(f"file://{ontology}").load() as ontology:
-        # TODO handle case sensitivity
         for leak in leaks:
             leak_phrases = phrases_from_method(leak, mappings)
             for phrase in leak_phrases:
