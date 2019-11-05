@@ -12,19 +12,19 @@ from xml.etree.ElementTree import fromstring
 
 def detect(ontology_path, mappings_path, fd_out, privacy_policy_path=None):
     try:
-        with open(fd_out, 'r') as fd_f:
-            leaks = get_leaks(fd_f.read())
-            if not leaks:
-                sys.exit()
-    except IOError as e:
-        print(f"Unable to open FlowDroid output file at '{fd_out}': {e}", file=sys.stderr)
-        sys.exit(-1)
-
-    try:
         with open(mappings_path, 'r') as map_f:
             mappings = map_f.read()
     except IOError as e:
         print(f"Unable to open mappings file at '{mappings_path}': {e}", file=sys.stderr)
+        sys.exit(-1)
+
+    try:
+        with open(fd_out, 'r') as fd_f:
+            leaks = get_leaks(fd_f.read(), mappings)
+            if not leaks:
+                sys.exit()
+    except IOError as e:
+        print(f"Unable to open FlowDroid output file at '{fd_out}': {e}", file=sys.stderr)
         sys.exit(-1)
 
     if privacy_policy_path:
@@ -50,15 +50,17 @@ def detect(ontology_path, mappings_path, fd_out, privacy_policy_path=None):
         print("[NO VIOLATIONS DETECTED]")
 
 
-def get_leaks(fd_out):
+def get_leaks(fd_out, mappings):
     """
-    Parses FlowDroid xml and extracts sources of leaks
+    Parses FlowDroid xml and extracts sources of leaks. Leaks are only kept if there is a corresponding mapping.
     :param fd_out: String representation of FlowDroid xml
+    :param mappings: API-Phrase mappings
     :return: List of sources as method names
     """
     root = fromstring(fd_out)
-    sources = [source.get('Statement') for source in root.findall('Results/Result/Sources/Source')]
-    return list(map(lambda a: re.sub(r"^.*<(.+)>.*$", r"\1", a), sources))
+    source_lines = [source.get('Statement') for source in root.findall('Results/Result/Sources/Source')]
+    source_signatures = list(map(lambda a: re.sub(r"^.*<(.+)>.*$", r"\1", a), source_lines))
+    return list(filter(lambda a: a in mappings, source_signatures))
 
 
 def get_policy_phrases(policy, mappings):
