@@ -4,7 +4,6 @@ PVDetector v2.0.0
 Author: Rocky Slavin
 """
 import argparse
-import os
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("ontology_path", metavar="<ontology>", help="ontology as .owl file")
     parser.add_argument("mappings_path", metavar="<mappings_path>", help="api-phrase mappings as .csv file")
-    parser.add_argument("-p", "--privacy-policy-path", help="privacy policy as text file")
+    parser.add_argument("-p", "--privacy-policy-path", help="privacy policy as text file - blank policy used by default")
     parser.add_argument("fd_out", metavar="<flowdroid_out>", help="dataflow output from FlowDroid as .xml file")
     args = parser.parse_args()
 
