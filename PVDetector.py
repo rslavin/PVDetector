@@ -6,15 +6,14 @@ Author: Rocky Slavin
 import argparse
 import re
 import sys
-import xml.etree.ElementTree as ET
-import owlready2
+from owlready2 import get_ontology
+from xml.etree.ElementTree import fromstring
+
 
 def detect(ontology_path, mappings_path, fd_out, privacy_policy_path=None):
-
     try:
         with open(fd_out, 'r') as fd_f:
-            dataflows = fd_f.read()
-            leaks = get_leaks(dataflows)
+            leaks = get_leaks(fd_f.read())
             if not leaks:
                 sys.exit()
     except IOError as e:
@@ -54,9 +53,10 @@ def get_leaks(fd_out):
     :param fd_out: String representation of FlowDroid xml
     :return: List of sources as method names
     """
-    root = ET.fromstring(fd_out)
+    root = fromstring(fd_out)
     sources = [source.get('Statement') for source in root.findall('Results/Result/Sources/Source')]
     return list(map(lambda a: re.sub(r"^.*<(.+)>.*$", r"\1", a), sources))
+
 
 def get_policy_phrases(policy, mappings):
     """
@@ -109,12 +109,12 @@ def filter_implicit(leaks, mappings, policy, ontology):
     :param mappings: API-phrase mappings
     :param policy: String representation of privacy policy
     :param ontology: hierarchical ontology of terms
-    :return: Tuple of two lists: List of leaks which are represented thorough higher-level abstractions in the privacy policy,
+    :return: Tuple of two lists: List of leaks which are represented thorough higher-level abstractions in the  policy,
         List of leaks which are not represented at all in the privacy policy
     """
     weak_violations = {}
     strong_violations = []
-    with owlready2.get_ontology(f"file://{ontology}").load() as ontology:
+    with get_ontology(f"file://{ontology}").load() as ontology:
         for leak in leaks:
             leak_phrases = phrases_from_method(leak, mappings)
             for phrase in leak_phrases:
@@ -127,7 +127,8 @@ def filter_implicit(leaks, mappings, policy, ontology):
                 # remove information and thing nodes
                 ancestors = [a for a in ancestors if a.lower() not in ['thing', 'information']]
                 # if an ancestor exists in the policy, the leak is a weak violation
-                abstract_phrases = list(filter(lambda a: re.search(r"\b%s\b" % a.replace("_", " "), policy, re.I), list(ancestors)))
+                abstract_phrases = list(
+                    filter(lambda a: re.search(r"\b%s\b" % a.replace("_", " "), policy, re.I), list(ancestors)))
                 if abstract_phrases:
                     weak_violations[leak] = abstract_phrases
                     break
@@ -142,7 +143,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("ontology_path", metavar="<ontology>", help="ontology as .owl file")
     parser.add_argument("mappings_path", metavar="<mappings_path>", help="api-phrase mappings as .csv file")
-    parser.add_argument("-p", "--privacy-policy-path", help="privacy policy as text file - blank policy used by default")
+    parser.add_argument("-p", "--privacy-policy-path",
+                        help="privacy policy as text file - blank policy used by default")
     parser.add_argument("fd_out", metavar="<flowdroid_out>", help="dataflow output from FlowDroid as .xml file")
     args = parser.parse_args()
 
