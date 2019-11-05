@@ -29,7 +29,7 @@ def detect(ontology_path, mappings_path, fd_out, privacy_policy_path=None):
 
     if privacy_policy_path:
         try:
-            with open(privacy_policy_path) as pp_f:
+            with open(privacy_policy_path, 'r') as pp_f:
                 privacy_policy = pp_f.read()
         except IOError as e:
             print(f"Unable to open privacy policy file at '{privacy_policy_path}': {e}", file=sys.stderr)
@@ -45,6 +45,9 @@ def detect(ontology_path, mappings_path, fd_out, privacy_policy_path=None):
         print(f"[WEAK VIOLATION]: {wv}\n\t[PHRASES]: {phrases}")
     for sv in strong_violations:
         print(f"[STRONG VIOLATION]: {sv}")
+
+    if not weak_violations and not strong_violations:
+        print("[NO VIOLATIONS DETECTED]")
 
 
 def get_leaks(fd_out):
