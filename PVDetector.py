@@ -22,6 +22,7 @@ def detect(ontology_path, mappings_path, fd_out, privacy_policy_path=None):
         with open(fd_out, 'r') as fd_f:
             leaks = get_leaks(fd_f.read(), mappings)
             if not leaks:
+                print("[NO LEAKS PRESENT]")
                 sys.exit()
     except IOError as e:
         print(f"Unable to open FlowDroid output file at '{fd_out}': {e}", file=sys.stderr)
