@@ -22,7 +22,7 @@ def detect(ontology_path, mappings_path, fd_out, privacy_policy_path=None):
         with open(fd_out, 'r') as fd_f:
             leaks = get_leaks(fd_f.read(), mappings)
             if not leaks:
-                print("[NO LEAKS PRESENT]")
+                print("[NO LEAKS PRESENT FOR MAPPINGS PROVIDED]")
                 sys.exit()
     except IOError as e:
         print(f"Unable to open FlowDroid output file at '{fd_out}': {e}", file=sys.stderr)
@@ -72,7 +72,7 @@ def get_policy_phrases(policy, mappings):
     :return: List of all mapped phrases in policy
     """
     # TODO implement sentiment analysis
-    mappings_phrases = set(re.sub(r'^"([^"]+)",.*$', r"\1", mappings, flags=re.M).splitlines())
+    mappings_phrases = set(re.sub(r'^"?([^",]+)"?,.*$', r"\1", mappings, flags=re.M).splitlines())
     return list(filter(lambda a: re.search(r"\b%s\b" % a, policy, re.I), mappings_phrases))
 
 
@@ -105,7 +105,7 @@ def phrases_from_method(method, mappings):
     :return: Set of phrases corresponding to the method
     """
     matched_mappings = list(filter(lambda a: method in a, mappings.splitlines()))
-    return set(map(lambda a: re.sub(r'^"([^"]+)",.*$', r"\1", a), matched_mappings))
+    return set(map(lambda a: re.sub(r'^"?([^",]+)"?,.*$', r"\1", a), matched_mappings))
 
 
 def filter_implicit(leaks, mappings, policy, ontology):
